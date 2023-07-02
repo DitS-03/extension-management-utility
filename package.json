@@ -1,0 +1,112 @@
+{
+  "name": "extension-management-utility",
+  "displayName": "extension-management-utility",
+  "description": "This enhances vscode extension management functionality.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.79.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "extension-management-utility.create-new-group",
+        "title": "Create New Group",
+        "icon": "$(add)"
+      },
+      {
+        "command": "extension-management-utility.rename-group",
+        "title": "Rename Group",
+        "icon": "$(pencil)"
+      },
+      {
+        "command": "extension-management-utility.add-extension-to-group",
+        "title": "Add Extension",
+        "icon": "$(add)"
+      },
+      {
+        "command": "extension-management-utility.remove-extension-from-group",
+        "title": "Remove Extension from Group",
+        "icon": "$(close)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "extension-management-utility.create-new-group",
+          "when": "view == extension-group-view",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "extension-management-utility.add-extension-to-group",
+          "when": "view == extension-group-view && viewItem == ExtensionGroup",
+          "group": "inline"
+        },
+        {
+          "command": "extension-management-utility.rename-group",
+          "when": "view == extension-group-view && viewItem == ExtensionGroup",
+          "group": "inline"
+        },
+        {
+          "command": "extension-management-utility.remove-extension-from-group",
+          "when": "view == extension-group-view && viewItem == GroupedExtension",
+          "group": "inline"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "extension-management-utility",
+          "title": "Extension Management Utility",
+          "icon": "$(gather)"
+        }
+      ]
+    },
+    "views": {
+      "extension-management-utility" : [
+        {
+          "id": "installed-list-view",
+          "name": "Installed List"
+        },
+        {
+          "id": "extension-group-view",
+          "name": "Extension Group"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.79.0",
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "20.2.5",
+    "@typescript-eslint/eslint-plugin": "^5.59.8",
+    "@typescript-eslint/parser": "^5.59.8",
+    "eslint": "^8.41.0",
+    "glob": "^8.1.0",
+    "mocha": "^10.2.0",
+    "typescript": "^5.1.3",
+    "ts-loader": "^9.4.3",
+    "webpack": "^5.85.0",
+    "webpack-cli": "^5.1.1",
+    "@vscode/test-electron": "^2.3.2"
+  }
+}
