@@ -32,6 +32,11 @@
         "command": "extension-management-utility.remove-extension-from-group",
         "title": "Remove Extension from Group",
         "icon": "$(close)"
+      },
+      {
+        "command": "extension-management-utility.remove-group",
+        "title": "Remove Group",
+        "icon": "$(close)"
       }
     ],
     "menus": {
@@ -49,14 +54,35 @@
           "group": "inline"
         },
         {
+          "command": "extension-management-utility.add-extension-to-group",
+          "when": "view == extension-group-view && viewItem == ExtensionGroup"
+        },
+        {
           "command": "extension-management-utility.rename-group",
           "when": "view == extension-group-view && viewItem == ExtensionGroup",
           "group": "inline"
         },
         {
+          "command": "extension-management-utility.rename-group",
+          "when": "view == extension-group-view && viewItem == ExtensionGroup"
+        },
+        {
           "command": "extension-management-utility.remove-extension-from-group",
           "when": "view == extension-group-view && viewItem == GroupedExtension",
           "group": "inline"
+        },
+        {
+          "command": "extension-management-utility.remove-extension-from-group",
+          "when": "view == extension-group-view && viewItem == GroupedExtension"
+        },
+        {
+          "command": "extension-management-utility.remove-group",
+          "when": "view == extension-group-view && viewItem == ExtensionGroup",
+          "group": "inline"
+        },
+        {
+          "command": "extension-management-utility.remove-group",
+          "when": "view == extension-group-view && viewItem == ExtensionGroup"
         }
       ]
     },

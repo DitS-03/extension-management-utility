@@ -4,7 +4,7 @@ import * as path from 'path';
 
 export class ExtensionEntry extends vscode.TreeItem {
     constructor(public extension: vscode.Extension<any>) {
-        super(extension.packageJSON['displayName']);
+        super(extension.packageJSON['displayName'] || "No Name");
         if (extension.packageJSON['icon'] !== undefined) {
             this.iconPath = path.join(extension.extensionPath,extension.packageJSON['icon']);
         }

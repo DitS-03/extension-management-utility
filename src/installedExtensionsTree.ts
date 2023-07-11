@@ -1,17 +1,10 @@
 
 import * as vscode from 'vscode';
-import * as path from 'path';
 import { ExtensionEntry, QuickPickExtensionItem } from './extensionEntry';
 
 export class InstalledExtensionsTreeProvider implements vscode.TreeDataProvider<ExtensionEntry>{
 
-    private _extensionList : ExtensionEntry[];
-
-    constructor() {
-        this._extensionList = vscode.extensions.all
-            .filter( (extension) => { return !extension.id.startsWith('vscode.'); } )
-            .map( (extension) => { return new ExtensionEntry(extension); } );
-    };
+    constructor(private _extensionList : ExtensionEntry[]) {};
 
     getTreeItem(element: ExtensionEntry): vscode.TreeItem | Thenable<vscode.TreeItem> {
         return element;
@@ -44,6 +37,4 @@ export class DragFromInstalledController implements vscode.TreeDragAndDropContro
     async handleDrag(source: readonly ExtensionEntry[], dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): Promise<void> {
         dataTransfer.set('application/vnd.code.tree.extension-group-view', new vscode.DataTransferItem(source));
     }
-
-
 }
