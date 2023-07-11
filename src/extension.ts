@@ -77,6 +77,34 @@ export function activate(context: vscode.ExtensionContext) {
 				(multiSelectNodes || [node]).map((node) => { extensionGroupTreeProvider.removeGroup(node); });
 				extensionGroupTreeProvider.refresh();
 			}),
+		vscode.commands.registerCommand(
+			'extension-management-utility.export-extension-groups',
+			async () => {
+				let jsonObj: { [member: string]: string[] | string } = {};
+				jsonObj['extension-management-utility-version'] = context.extension.packageJSON['version'];
+				for (let entry of extensionGroupRepository.getGroupList()) {
+					jsonObj[entry.label] = entry.extensionEntries.map((entry) => { return entry.extension.id; });
+				}
+				vscode.commands.executeCommand("workbench.action.files.newUntitledFile").then(() => {
+					let editor = vscode.window.activeTextEditor;
+					if (editor) {
+						let location = editor.document.positionAt(0);
+						editor.edit(editBuilder => { editBuilder.insert(location, "extension-group-list.json"); });
+						return vscode.commands.executeCommand("workbench.action.files.saveAs");
+					}
+				}).then(() => {
+					let editor = vscode.window.activeTextEditor;
+					if (editor) {
+						let location = editor.document.positionAt(0);
+						let range = editor.document.getWordRangeAtPosition(location, new RegExp("extension-group-list.json"));
+						if (range) {
+							editor.edit(editBuilder => { editBuilder.replace(range as vscode.Range, JSON.stringify(jsonObj)); });
+							vscode.commands.executeCommand("editor.action.formatDocument");
+							vscode.window.activeTextEditor?.document.save();
+						}
+					}
+				});;
+			}),
 	);
 
 }

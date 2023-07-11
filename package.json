@@ -37,12 +37,22 @@
         "command": "extension-management-utility.remove-group",
         "title": "Remove Group",
         "icon": "$(close)"
+      },
+      {
+        "command": "extension-management-utility.export-extension-groups",
+        "title": "Export Extension Group List",
+        "icon": "$(export)"
       }
     ],
     "menus": {
       "view/title": [
         {
           "command": "extension-management-utility.create-new-group",
+          "when": "view == extension-group-view",
+          "group": "navigation"
+        },
+        {
+          "command": "extension-management-utility.export-extension-groups",
           "when": "view == extension-group-view",
           "group": "navigation"
         }
