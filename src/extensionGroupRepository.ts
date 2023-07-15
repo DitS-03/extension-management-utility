@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { ExtensionGroupEntry } from './extensionGroupTree';
 import { ExtensionRepository } from './extensionRepository';
-import { group } from 'console';
+import { selectDialogForever } from './util/selectDialogForever';
+import { ExtensionGroupEntry } from './extensionGroupEntry';
 
 export class ExtensionGroupRepository {
 
@@ -14,10 +14,10 @@ export class ExtensionGroupRepository {
     }
 
     private _loadExtensionGroups() {
-        // load group informations from storage
+        // load group information from storage
         this._groupsData = this._context.globalState.get(this._storageKey, {});
 
-        // convert group informations into list of ExtensionGroupEntry
+        // convert group information into list of ExtensionGroupEntry
         Object.entries(this._groupsData).map(
             // convert group information into ExtensionGroupEntry
             ([groupName, extensionIds]) => { 
@@ -33,7 +33,7 @@ export class ExtensionGroupRepository {
     removeGroup(groupName: string) {
         delete this._groupsData[groupName];
         this._extensionGroupMap.delete(groupName);
-        this._saveGroupInformations();
+        this._saveGroupInformation();
     }
 
     renameGroup(originalName: string, newName: string) {
@@ -46,18 +46,54 @@ export class ExtensionGroupRepository {
             this._groupsData[newName] = this._groupsData[originalName];
             delete this._groupsData[originalName];
 
-            this._saveGroupInformations();
+            this._saveGroupInformation();
         }
     }
 
-    updateGroup(entry: ExtensionGroupEntry) {
+    async updateGroup(entry: ExtensionGroupEntry) {
         this._extensionGroupMap.set(entry.label, entry);
         this._groupsData[entry.label] =
             entry.extensionEntries.map((entry) => { return entry.extension.id; });
-        this._saveGroupInformations();
+        await this._saveGroupInformation();
     }
 
-    private _saveGroupInformations() {
-        this._context.globalState.update(this._storageKey, this._groupsData);
+    private async _saveGroupInformation() {
+        await this._context.globalState.update(this._storageKey, this._groupsData);
+    }
+
+    async importGroups(groupsData: { [member: string]: string[] }) {
+        for (let [groupName, extensionIds] of Object.entries(groupsData)) {
+            if (this._groupsData.hasOwnProperty(groupName)) {
+                let items = [
+                    `Skip import ${groupName}`,
+                    `Overwrite ${groupName}`,
+                    `Merge old and new ${groupName}`,
+                    `Import ${groupName} as other name`
+                ];
+                switch (await selectDialogForever(items)) {
+                    case undefined: continue;
+                    case items[0]: continue;
+                    case items[1]: break;
+                    case items[2]:
+                        let currentExtensionIds = groupsData[groupName];
+                        let uniqueIds = new Set(currentExtensionIds.concat(extensionIds));
+                        extensionIds = Array.from(uniqueIds);
+                        break;
+                    default:
+                        let newGroupName: string | undefined = groupName;
+                        while (newGroupName && newGroupName === groupName) {
+                            newGroupName = await vscode.window.showInputBox({ title: 'Rename extension group name.', "value": newGroupName });
+                        }
+                        if (!newGroupName) {
+                            continue;
+                        } else {
+                            groupName = newGroupName;
+                        }
+                        break;
+                }
+            }
+            await this._extensionRepository.installExtensions(extensionIds);
+            await this.updateGroup(new ExtensionGroupEntry(groupName, this._extensionRepository.getExtensions(extensionIds)));
+        }
     }
 }

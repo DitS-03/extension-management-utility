@@ -2,10 +2,12 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { InstalledExtensionsTreeProvider, DragFromInstalledController } from './installedExtensionsTree';
-import { ExtensionGroupEntry, ExtensionGroupTreeProvider } from './extensionGroupTree';
+import { ExtensionGroupTreeProvider } from './extensionGroupTree';
 import { ExtensionGroupRepository } from './extensionGroupRepository';
 import { ExtensionRepository } from './extensionRepository';
 import { GroupedExtensionEntry } from './groupedExtensionEntry';
+import { saveFileDialogWithDefaultName } from './util/saveFileDialogWithDefaultName';
+import { ExtensionGroupEntry } from './extensionGroupEntry';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -60,6 +62,7 @@ export function activate(context: vscode.ExtensionContext) {
 			async (node: ExtensionGroupEntry) => {
 				let quickPickExtensionItems = installedExtensionsTreeProvider.getQuickPickExtensionItems();
 				await node.addExtensionsViaQuickPick(quickPickExtensionItems);
+				extensionGroupRepository.updateGroup(node);
 				extensionGroupTreeProvider.refresh();
 			}),
 		vscode.commands.registerCommand(
@@ -85,28 +88,30 @@ export function activate(context: vscode.ExtensionContext) {
 				for (let entry of extensionGroupRepository.getGroupList()) {
 					jsonObj[entry.label] = entry.extensionEntries.map((entry) => { return entry.extension.id; });
 				}
-				vscode.commands.executeCommand("workbench.action.files.newUntitledFile").then(() => {
-					let editor = vscode.window.activeTextEditor;
-					if (editor) {
-						let location = editor.document.positionAt(0);
-						editor.edit(editBuilder => { editBuilder.insert(location, "extension-group-list.json"); });
-						return vscode.commands.executeCommand("workbench.action.files.saveAs");
-					}
-				}).then(() => {
-					let editor = vscode.window.activeTextEditor;
-					if (editor) {
-						let location = editor.document.positionAt(0);
-						let range = editor.document.getWordRangeAtPosition(location, new RegExp("extension-group-list.json"));
-						if (range) {
-							editor.edit(editBuilder => { editBuilder.replace(range as vscode.Range, JSON.stringify(jsonObj)); });
-							vscode.commands.executeCommand("editor.action.formatDocument");
-							vscode.window.activeTextEditor?.document.save();
-						}
-					}
-				});;
+				await saveFileDialogWithDefaultName("extension-group-list.json", JSON.stringify(jsonObj));
 			}),
-	);
+		vscode.commands.registerCommand(
+			'extension-management-utility.import-extension-groups',
+			async () => {
+				const options: vscode.OpenDialogOptions = {
+					canSelectMany: false,
+					openLabel: 'Select',
+					canSelectFiles: true,
+					canSelectFolders: false
+				};
 
+				let fileUri = await vscode.window.showOpenDialog(options);
+				if (fileUri && fileUri[0]) {
+					let result = await vscode.window.showTextDocument(fileUri[0]);
+					let jsonStr = result.document.getText();
+					let jsonObj = JSON.parse(jsonStr);
+					delete jsonObj["extension-management-utility-version"];
+					await extensionGroupRepository.importGroups(jsonObj);
+				}
+
+				extensionGroupTreeProvider.refresh();
+			})
+	);
 }
 
 // This method is called when your extension is deactivated

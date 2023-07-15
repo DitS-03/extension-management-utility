@@ -12,9 +12,9 @@ export class InstalledExtensionsTreeProvider implements vscode.TreeDataProvider<
 
     getChildren(element?: ExtensionEntry | undefined): vscode.ProviderResult<ExtensionEntry[]> {
         if (element === undefined) {
-            return this._extensionList;
+            return Promise.resolve(this._extensionList);
         } else {
-            return new Array<ExtensionEntry>(0);
+            return Promise.resolve(new Array<ExtensionEntry>(0));
         }
     };
 

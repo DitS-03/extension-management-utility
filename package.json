@@ -40,8 +40,13 @@
       },
       {
         "command": "extension-management-utility.export-extension-groups",
-        "title": "Export Extension Group List",
+        "title": "Export Extension Groups",
         "icon": "$(export)"
+      },
+      {
+        "command": "extension-management-utility.import-extension-groups",
+        "title": "Import Extension groups",
+        "icon": "$(empty-window)"
       }
     ],
     "menus": {
@@ -53,6 +58,11 @@
         },
         {
           "command": "extension-management-utility.export-extension-groups",
+          "when": "view == extension-group-view",
+          "group": "navigation"
+        },
+        {
+          "command": "extension-management-utility.import-extension-groups",
           "when": "view == extension-group-view",
           "group": "navigation"
         }

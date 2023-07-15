@@ -13,7 +13,7 @@ export class ExtensionGroupTreeProvider implements
     private _onDidChangeTreeData: vscode.EventEmitter<ExtensionGroupEntry | GroupedExtensionEntry | undefined | null | void>;
     readonly onDidChangeTreeData: vscode.Event<ExtensionGroupEntry | GroupedExtensionEntry | undefined | null | void>;
 
-    constructor(private _extensionGruopRepository: ExtensionGroupRepository) {
+    constructor(private _extensionGroupRepository: ExtensionGroupRepository) {
         // for view update
         this._onDidChangeTreeData = new vscode.EventEmitter<ExtensionGroupEntry | GroupedExtensionEntry | undefined | null | void>();
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -30,26 +30,26 @@ export class ExtensionGroupTreeProvider implements
 
     getChildren(element?: ExtensionGroupEntry | GroupedExtensionEntry | undefined): vscode.ProviderResult<(ExtensionGroupEntry | GroupedExtensionEntry)[]> {
         if (element === undefined) {
-            return this._extensionGruopRepository.getGroupList();
+            return Promise.resolve(this._extensionGroupRepository.getGroupList());
         } else if (element instanceof ExtensionGroupEntry) {
-            return element.extensionEntries;
+            return Promise.resolve(element.extensionEntries);
         } else {
-            return [];
+            return Promise.resolve([]);
         }
     }
 
     getGroupList(): string[] {
-        return this._extensionGruopRepository.getGroupList().map((extension: ExtensionGroupEntry) => { return extension.label; });
+        return this._extensionGroupRepository.getGroupList().map((extension: ExtensionGroupEntry) => { return extension.label; });
     }
 
     async createNewGroup(groupName: string) {
         // TODO: check uniqueness of group name
-        this._extensionGruopRepository.updateGroup(new ExtensionGroupEntry(groupName, []));
+        this._extensionGroupRepository.updateGroup(new ExtensionGroupEntry(groupName, []));
         this.refresh();
     }
 
     async removeGroup(node: ExtensionGroupEntry) {
-        this._extensionGruopRepository.removeGroup(node.label);
+        this._extensionGroupRepository.removeGroup(node.label);
         this.refresh();
     }
 
@@ -85,10 +85,8 @@ export class ExtensionGroupTreeProvider implements
             .filter((entry) => { return !labelList.includes(entry.label); })
             .map((entry) => { return entry.extension; });
         target.addExtensions(extensions);
-        this._extensionGruopRepository.updateGroup(target);
+        this._extensionGroupRepository.updateGroup(target);
 
         this.refresh();
     }
 }
-
-export { ExtensionGroupEntry };

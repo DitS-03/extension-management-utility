@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { ExtensionEntry } from './extensionEntry';
-import { ExtensionGroupEntry } from './extensionGroupTree';
 
 export class ExtensionRepository {
 
@@ -8,6 +7,7 @@ export class ExtensionRepository {
 
     constructor(private _context: vscode.ExtensionContext) {
         this._updateExtensionList();
+        vscode.extensions.onDidChange(() => (vscode.window.showInformationMessage("extension list updated")));
     }
 
     private _updateExtensionList() {
@@ -22,5 +22,14 @@ export class ExtensionRepository {
 
     getExtensions(ids: string[]): vscode.Extension<any>[] {
         return this._extensionList.filter( (extension) => { return ids.includes(extension.id); });
+    }
+
+    async installExtensions(extensionIds: string[]) {
+        for (let extensionId of extensionIds) {
+            if (!this._extensionList.find((extension) => { return extension.id === extensionId; })) {
+                await vscode.commands.executeCommand("workbench.extensions.installExtension", extensionId);
+            }
+        }
+        this._updateExtensionList();
     }
 }
