@@ -8,6 +8,7 @@ import { ExtensionRepository } from './extensionRepository';
 import { GroupedExtensionEntry } from './groupedExtensionEntry';
 import { saveFileDialogWithDefaultName } from './util/saveFileDialogWithDefaultName';
 import { ExtensionGroupEntry } from './extensionGroupEntry';
+import { allOrSelectObjectProperties } from './util/allOrSelectObjectProperties';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -84,11 +85,15 @@ export function activate(context: vscode.ExtensionContext) {
 			'extension-management-utility.export-extension-groups',
 			async () => {
 				let jsonObj: { [member: string]: string[] | string } = {};
-				jsonObj['extension-management-utility-version'] = context.extension.packageJSON['version'];
 				for (let entry of extensionGroupRepository.getGroupList()) {
 					jsonObj[entry.label] = entry.extensionEntries.map((entry) => { return entry.extension.id; });
 				}
-				await saveFileDialogWithDefaultName("extension-group-list.json", JSON.stringify(jsonObj));
+
+				let selectedJsonObj = await allOrSelectObjectProperties("Export All", "Export Selected", jsonObj);
+				if (selectedJsonObj) {
+					jsonObj['extension-management-utility-version'] = context.extension.packageJSON['version'];
+					await saveFileDialogWithDefaultName("extension-group-list.json", JSON.stringify(jsonObj));
+				}
 			}),
 		vscode.commands.registerCommand(
 			'extension-management-utility.import-extension-groups',
@@ -99,18 +104,26 @@ export function activate(context: vscode.ExtensionContext) {
 					canSelectFiles: true,
 					canSelectFolders: false
 				};
-
 				let fileUri = await vscode.window.showOpenDialog(options);
-				if (fileUri && fileUri[0]) {
-					let result = await vscode.window.showTextDocument(fileUri[0]);
-					let jsonStr = result.document.getText();
-					let jsonObj = JSON.parse(jsonStr);
-					delete jsonObj["extension-management-utility-version"];
-					await extensionGroupRepository.importGroups(jsonObj);
+				if (!fileUri || !fileUri[0]) {
+					return; // GUARD
 				}
 
-				extensionGroupTreeProvider.refresh();
-			})
+				let result = await vscode.window.showTextDocument(fileUri[0]);
+				let jsonStr = result.document.getText();
+				let jsonObj = JSON.parse(jsonStr);
+				delete jsonObj["extension-management-utility-version"];
+
+				let selectedJsonObj = await allOrSelectObjectProperties("Import All", "Import Selected", jsonObj);
+				if (selectedJsonObj) {
+					await extensionGroupRepository.importGroups(jsonObj);
+					extensionGroupTreeProvider.refresh();
+				}
+			}),
+		vscode.extensions.onDidChange(() => {
+			extensionGroupRepository.processInstallWaitedList();
+			extensionGroupTreeProvider.refresh();
+		})
 	);
 }
 

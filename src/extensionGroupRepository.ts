@@ -3,13 +3,18 @@ import { ExtensionRepository } from './extensionRepository';
 import { selectDialogForever } from './util/selectDialogForever';
 import { ExtensionGroupEntry } from './extensionGroupEntry';
 
+class InstallWaitedItem {
+    constructor(public extensionId: string,  public extensionGroupEntry: ExtensionGroupEntry) {}
+}
+
 export class ExtensionGroupRepository {
 
     private _storageKey: string = 'extension-management-utility.group-map';
     private _extensionGroupMap: Map<string, ExtensionGroupEntry> = new Map<string, ExtensionGroupEntry>();
     private _groupsData: { [member: string]: string[] } = {};
+    private _installWaitedItems: InstallWaitedItem[] = [];
 
-    constructor(private _context: vscode.ExtensionContext, private _extensionRepository : ExtensionRepository) {
+    constructor(private _context: vscode.ExtensionContext, private _extensionRepository: ExtensionRepository) {
         this._loadExtensionGroups();
     }
 
@@ -18,12 +23,10 @@ export class ExtensionGroupRepository {
         this._groupsData = this._context.globalState.get(this._storageKey, {});
 
         // convert group information into list of ExtensionGroupEntry
-        Object.entries(this._groupsData).map(
-            // convert group information into ExtensionGroupEntry
-            ([groupName, extensionIds]) => { 
-                let extensions = this._extensionRepository.getExtensions(extensionIds);
-                this._extensionGroupMap.set(groupName, new ExtensionGroupEntry(groupName, extensions));
-            });
+        Object.entries(this._groupsData).map(([groupName, extensionIds]) => { 
+            let extensions = this._extensionRepository.getExtensions(extensionIds);
+            this._extensionGroupMap.set(groupName, new ExtensionGroupEntry(groupName, extensions));
+        });
     }
 
     getGroupList(): ExtensionGroupEntry[] {
@@ -65,10 +68,10 @@ export class ExtensionGroupRepository {
         for (let [groupName, extensionIds] of Object.entries(groupsData)) {
             if (this._groupsData.hasOwnProperty(groupName)) {
                 let items = [
-                    `Skip import ${groupName}`,
-                    `Overwrite ${groupName}`,
-                    `Merge old and new ${groupName}`,
-                    `Import ${groupName} as other name`
+                    `Skip import "${groupName}"`,
+                    `Overwrite "${groupName}"`,
+                    `Merge old and new "${groupName}"`,
+                    `Import "${groupName}" as other name`
                 ];
                 switch (await selectDialogForever(items)) {
                     case undefined: continue;
@@ -92,8 +95,22 @@ export class ExtensionGroupRepository {
                         break;
                 }
             }
-            await this._extensionRepository.installExtensions(extensionIds);
-            await this.updateGroup(new ExtensionGroupEntry(groupName, this._extensionRepository.getExtensions(extensionIds)));
+            let extensionGroupEntry = new ExtensionGroupEntry(groupName, this._extensionRepository.getExtensions(extensionIds));
+            this.updateGroup(extensionGroupEntry);
+            let installedIds = await this._extensionRepository.installExtensions(extensionIds);
+            this._installWaitedItems.push(...installedIds.map((id) => { return new InstallWaitedItem(id, extensionGroupEntry); }) );
         }
+    }
+
+    processInstallWaitedList() {
+        this._extensionRepository.updateExtensionList();
+        for (let item of this._installWaitedItems) {
+            let extension = vscode.extensions.getExtension(item.extensionId);
+            if (extension) {
+                item.extensionGroupEntry.addExtensions([extension]);
+                this.updateGroup(item.extensionGroupEntry);
+            }
+        }
+        this._installWaitedItems = [];
     }
 }
