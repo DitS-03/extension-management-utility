@@ -12,7 +12,7 @@ export class ExtensionRepository {
     updateExtensionList() {
         this._extensionList = vscode.extensions.all.filter(
             // predicate to remove built-in plugins
-            (extension) => { return !extension.id.startsWith('vscode.'); });
+            (extension) => { return !extension.id.startsWith('vscode.') && !extension.id.startsWith('ms-vscode.'); });
     }
 
     getExtensionEntryList(): ExtensionEntry[] {

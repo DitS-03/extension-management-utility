@@ -9,7 +9,7 @@ export async function saveFileDialogWithDefaultName(defaultName: string, content
         await editor.edit(editBuilder => { editBuilder.insert(location, defaultName); });
         await vscode.commands.executeCommand("workbench.action.files.saveAs");
         editor = vscode.window.activeTextEditor;
-        if(editor){
+        if (editor && !editor.document.isUntitled) {
             let range = editor.document.getWordRangeAtPosition(location, new RegExp(defaultName));
             if (range) {
                 await editor.edit(editBuilder => { editBuilder.replace(range as vscode.Range, content); });
