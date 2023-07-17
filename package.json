@@ -3,6 +3,7 @@
   "displayName": "extension-management-utility",
   "description": "This enhances vscode extension management functionality.",
   "version": "0.0.1",
+  "icon": "./resources/extension-manager-icon.svg",
   "engines": {
     "vscode": "^1.79.0"
   },
@@ -41,12 +42,18 @@
       {
         "command": "extension-management-utility.export-extension-groups",
         "title": "Export Extension Groups",
-        "icon": "$(export)"
+        "icon": {
+          "dark": "./resources/export-item.dark.svg",
+          "light": "./resources/export-item.light.svg"
+        }
       },
       {
         "command": "extension-management-utility.import-extension-groups",
         "title": "Import Extension groups",
-        "icon": "$(empty-window)"
+        "icon": {
+          "dark": "./resources/import-item.dark.svg",
+          "light": "./resources/import-item.light.svg"
+        }
       }
     ],
     "menus": {
@@ -111,7 +118,7 @@
         {
           "id": "extension-management-utility",
           "title": "Extension Management Utility",
-          "icon": "$(gather)"
+          "icon": "./resources/extension-management-view-icon.svg"
         }
       ]
     },
