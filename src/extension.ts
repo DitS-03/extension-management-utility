@@ -121,13 +121,6 @@ export function activate(context: vscode.ExtensionContext) {
 					extensionGroupTreeProvider.refresh();
 				}
 			}),
-		vscode.commands.registerCommand(
-			'extension-management-utility.open-extension-page',
-			async (node: ExtensionEntry, multiSelectNodes?: ExtensionEntry[]) => {
-				(multiSelectNodes || [node]).map(async (node) => {
-					await vscode.commands.executeCommand("vscode.open", node.extension.extensionUri);
-				});
-			}),
 		vscode.extensions.onDidChange(() => {
 			let diff = extensionRepository.updateExtensionList();
 			extensionGroupRepository.eraseRemovedExtensions(diff.removed);
