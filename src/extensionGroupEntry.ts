@@ -32,8 +32,10 @@ export class ExtensionGroupEntry extends vscode.TreeItem {
         this.extensionEntries.push(...entries);
     }
 
-    removeExtensionEntry(entry: GroupedExtensionEntry): void {
-        let index = this.extensionEntries.indexOf(entry);
-        this.extensionEntries.splice(index, 1);
+    removeExtensionEntry(entryId: string) : void {
+        let index = this.extensionEntries.findIndex((entry) => { return entry.extension.id === entryId; });
+        if (index !== -1) {
+            this.extensionEntries.splice(index, 1);
+        }
     }
 }

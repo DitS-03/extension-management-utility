@@ -49,11 +49,15 @@
       },
       {
         "command": "extension-management-utility.import-extension-groups",
-        "title": "Import Extension groups",
+        "title": "Import Extension Groups",
         "icon": {
           "dark": "./resources/import-item.dark.svg",
           "light": "./resources/import-item.light.svg"
         }
+      },
+      {
+        "command": "extension-management-utility.open-extension-page",
+        "title": "Open Extension Page"
       }
     ],
     "menus": {
@@ -110,6 +114,10 @@
         {
           "command": "extension-management-utility.remove-group",
           "when": "view == extension-group-view && viewItem == ExtensionGroup"
+        },
+        {
+          "command": "extension-management-utility.open-extension-page",
+          "when": "view == installed-list-view"
         }
       ]
     },

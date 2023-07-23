@@ -103,7 +103,6 @@ export class ExtensionGroupRepository {
     }
 
     processInstallWaitedList() {
-        this._extensionRepository.updateExtensionList();
         for (let item of this._installWaitedItems) {
             let extension = vscode.extensions.getExtension(item.extensionId);
             if (extension) {
@@ -112,5 +111,13 @@ export class ExtensionGroupRepository {
             }
         }
         this._installWaitedItems = [];
+    }
+
+    eraseRemovedExtensions(removedExtensionIds : string[]) {
+        for (let id of removedExtensionIds) {
+            for (let entry of this._extensionGroupMap.values()) {
+                entry.removeExtensionEntry(id);
+            }
+        }
     }
 }

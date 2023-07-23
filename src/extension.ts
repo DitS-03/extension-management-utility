@@ -9,15 +9,16 @@ import { GroupedExtensionEntry } from './groupedExtensionEntry';
 import { saveFileDialogWithDefaultName } from './util/saveFileDialogWithDefaultName';
 import { ExtensionGroupEntry } from './extensionGroupEntry';
 import { allOrSelectObjectProperties } from './util/allOrSelectObjectProperties';
+import { ExtensionEntry } from './extensionEntry';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 	
 	// Setup view for installed extension management
-	let extensionRepository = new ExtensionRepository(context);
+	let extensionRepository = new ExtensionRepository();
 	let installedExtensionList = extensionRepository.getExtensionEntryList();
-	const installedExtensionsTreeProvider = new InstalledExtensionsTreeProvider(installedExtensionList);
+	const installedExtensionsTreeProvider = new InstalledExtensionsTreeProvider(extensionRepository);
 	const dragFromInstalledController = new DragFromInstalledController();
 	vscode.window.createTreeView('installed-list-view', {
 		treeDataProvider: installedExtensionsTreeProvider,
@@ -70,7 +71,7 @@ export function activate(context: vscode.ExtensionContext) {
 			'extension-management-utility.remove-extension-from-group',
 			async (node: GroupedExtensionEntry, multiSelectNodes?: GroupedExtensionEntry[]) => {
 				(multiSelectNodes || [node]).map((node) => {
-					node.parent.removeExtensionEntry(node);
+					node.parent.removeExtensionEntry(node.extension.id);
 					extensionGroupRepository.updateGroup(node.parent);
 				});
 				extensionGroupTreeProvider.refresh();
@@ -120,7 +121,17 @@ export function activate(context: vscode.ExtensionContext) {
 					extensionGroupTreeProvider.refresh();
 				}
 			}),
+		vscode.commands.registerCommand(
+			'extension-management-utility.open-extension-page',
+			async (node: ExtensionEntry, multiSelectNodes?: ExtensionEntry[]) => {
+				(multiSelectNodes || [node]).map(async (node) => {
+					await vscode.commands.executeCommand("vscode.open", node.extension.extensionUri);
+				});
+			}),
 		vscode.extensions.onDidChange(() => {
+			let diff = extensionRepository.updateExtensionList();
+			extensionGroupRepository.eraseRemovedExtensions(diff.removed);
+			installedExtensionsTreeProvider.refresh();
 			extensionGroupRepository.processInstallWaitedList();
 			extensionGroupTreeProvider.refresh();
 		})

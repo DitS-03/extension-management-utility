@@ -1,18 +1,23 @@
 import * as vscode from 'vscode';
 import { ExtensionEntry } from './extensionEntry';
+import { getDiffOfArrays } from './util/getDiffOfArrays';
 
 export class ExtensionRepository {
-
+ 
     private _extensionList: vscode.Extension<any>[] = [];
 
-    constructor(private _context: vscode.ExtensionContext) {
+    constructor() {
         this.updateExtensionList();
     }
 
-    updateExtensionList() {
+    updateExtensionList() : { removed: Array<string>, added: Array<string> } {
+        let oldExtensionList = this._extensionList;
         this._extensionList = vscode.extensions.all.filter(
             // predicate to remove built-in plugins
             (extension) => { return !extension.id.startsWith('vscode.') && !extension.id.startsWith('ms-vscode.'); });
+        return getDiffOfArrays(
+            oldExtensionList.map((extension) => { return extension.id; }),
+            this._extensionList.map((extension) => { return extension.id; }));
     }
 
     getExtensionEntryList(): ExtensionEntry[] {
