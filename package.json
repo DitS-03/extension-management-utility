@@ -54,6 +54,14 @@
           "dark": "./resources/import-item.dark.svg",
           "light": "./resources/import-item.light.svg"
         }
+      },
+      {
+        "command": "extension-management-utility.enable-selected-extension-groups",
+        "title": "Set Selected Extension Enable",
+        "icon": {
+          "dark": "./resources/select-extension-groups.dark.svg",
+          "light": "./resources/select-extension-groups.light.svg"
+        }
       }
     ],
     "menus": {
@@ -70,6 +78,11 @@
         },
         {
           "command": "extension-management-utility.import-extension-groups",
+          "when": "view == extension-group-view",
+          "group": "navigation"
+        },
+        {
+          "command": "extension-management-utility.enable-selected-extension-groups",
           "when": "view == extension-group-view",
           "group": "navigation"
         }

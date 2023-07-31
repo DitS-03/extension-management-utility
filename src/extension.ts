@@ -9,7 +9,7 @@ import { GroupedExtensionEntry } from './groupedExtensionEntry';
 import { saveFileDialogWithDefaultName } from './util/saveFileDialogWithDefaultName';
 import { ExtensionGroupEntry } from './extensionGroupEntry';
 import { allOrSelectObjectProperties } from './util/allOrSelectObjectProperties';
-import { ExtensionEntry } from './extensionEntry';
+import { getDiffOfArrays } from './util/getDiffOfArrays';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -121,6 +121,30 @@ export function activate(context: vscode.ExtensionContext) {
 					extensionGroupTreeProvider.refresh();
 				}
 			}),
+		vscode.commands.registerCommand(
+			'enable-selected-extension-groups',
+			async () => {
+				let groups = extensionGroupRepository.getGroupList();
+				let groupNames = groups.map(group => { return group.label });
+				let result = await vscode.window.showQuickPick(groupNames, { canPickMany: true });
+				if (result) {
+					let selectedGroups = groups.filter(group => { return result?.includes(group.label) });
+					let selectedExtensions: vscode.Extension<any>[] = [];
+					for (let group of selectedGroups) {
+						let extensions = group.extensionEntries.map(entry => { return entry.extension });
+						selectedExtensions.push(...extensions);
+					}
+					let activeExtensions = vscode.extensions.all
+						.filter(extension => { return extension.isActive; })
+						.filter(extension => { return extension.id !== context.extension.id; })
+						.filter(extension => { return !extension.id.startsWith('vscode.') && !extension.id.startsWith('ms-vscode.'); });
+					let diff = getDiffOfArrays(activeExtensions, selectedExtensions);
+					for (let extension of diff.removed) {
+						/// extension..
+					}
+				}
+			}
+		),
 		vscode.extensions.onDidChange(() => {
 			let diff = extensionRepository.updateExtensionList();
 			extensionGroupRepository.eraseRemovedExtensions(diff.removed);
